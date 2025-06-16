@@ -2,7 +2,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export', // Enable static export for 'out' folder generation
+  // output: 'export', // Removed to enable server actions
   images: {
     unoptimized: true,
   },

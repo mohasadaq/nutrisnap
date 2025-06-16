@@ -152,18 +152,8 @@ export default function FoodScanSection() {
     }
     setIsLoading(true); setError(null); setScanResult(null);
     try {
-      // AI Call is intentionally disabled for static export as Server Actions are not supported.
-      // const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri });
-      // setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri });
-      
-      // Placeholder for static export - AI analysis is not available
-      setError("AI food analysis is not available in this version of the app.");
-      toast({
-        variant: "default",
-        title: "Feature Not Available",
-        description: "AI-powered food analysis requires a server and is disabled in this static build.",
-      });
-
+      const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri });
+      setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri });
     } catch (err) {
       console.error("AI analysis error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred during analysis.";
@@ -206,7 +196,7 @@ export default function FoodScanSection() {
             {showCamera ? 'Scan with Camera' : 'Upload Your Food Image'}
           </CardTitle>
           <CardDescription className="text-center">
-            {showCamera ? 'Position your food item in the frame and capture.' : 'Upload an image to see basic information. Full AI analysis requires server deployment.'}
+            {showCamera ? 'Position your food item in the frame and capture.' : 'Let our AI analyze the nutritional content of your meal.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -267,12 +257,12 @@ export default function FoodScanSection() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Processing...
+                    Analyzing...
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Analyze Meal (AI Disabled for Static Build)
+                    Analyze Meal
                   </>
                 )}
               </Button>
@@ -298,7 +288,7 @@ export default function FoodScanSection() {
          </Alert>
       )}
 
-      {scanResult && !isLoading && ( // scanResult will be null if AI is disabled as per current handleSubmit
+      {scanResult && !isLoading && (
         <NutritionDisplayCard item={scanResult} />
       )}
     </div>
