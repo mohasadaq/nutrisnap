@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera, XCircle } from 'lucide-react';
 import NutritionDisplayCard from './nutrition-display-card';
 import type { ScannedFoodItem } from '@/lib/types';
-import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition'; // AI Call disabled for static export
+import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -49,7 +49,8 @@ export default function FoodScanSection() {
     if (showCamera) {
       const getCameraPermission = async () => {
         try {
-          const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          // Prioritize back camera
+          const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
           currentStream = mediaStream;
           setStream(mediaStream);
           setHasCameraPermission(true);
@@ -57,15 +58,27 @@ export default function FoodScanSection() {
             videoRef.current.srcObject = mediaStream;
           }
         } catch (err) {
-          console.error('Error accessing camera:', err);
-          setHasCameraPermission(false);
-          setError("Camera access was denied or is unavailable. Please check your browser settings.");
-          toast({
-            variant: 'destructive',
-            title: 'Camera Access Denied',
-            description: 'Please enable camera permissions in your browser settings to use this feature.',
-          });
-          setShowCamera(false); 
+          console.error('Error accessing environment camera, trying default:', err);
+          // Fallback to default camera if environment-facing is not available or fails
+          try {
+            const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            currentStream = mediaStream;
+            setStream(mediaStream);
+            setHasCameraPermission(true);
+            if (videoRef.current) {
+              videoRef.current.srcObject = mediaStream;
+            }
+          } catch (finalErr) {
+            console.error('Error accessing default camera:', finalErr);
+            setHasCameraPermission(false);
+            setError("Camera access was denied or is unavailable. Please check your browser settings.");
+            toast({
+              variant: 'destructive',
+              title: 'Camera Access Denied',
+              description: 'Please enable camera permissions in your browser settings to use this feature.',
+            });
+            setShowCamera(false);
+          }
         }
       };
       getCameraPermission();
