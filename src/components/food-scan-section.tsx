@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera } from 'lucide-react';
+import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera, XCircle } from 'lucide-react';
 import NutritionDisplayCard from './nutrition-display-card';
 import type { ScannedFoodItem } from '@/lib/types';
 import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition';
@@ -82,7 +82,7 @@ export default function FoodScanSection() {
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
       }
-       if (stream && !showCamera) { // ensure stream is stopped if component unmounts while camera was supposed to be off
+       if (stream && !showCamera) { 
         stream.getTracks().forEach(track => track.stop());
       }
     };
@@ -109,8 +109,8 @@ export default function FoodScanSection() {
       }
 
       setError(null); setScanResult(null); 
-      if (showCamera) setShowCamera(false); // Switch to file upload mode visually
-      setInitialCameraModeApplied(true); // User interacted, override query param check for this instance
+      if (showCamera) setShowCamera(false); 
+      setInitialCameraModeApplied(true); 
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -136,7 +136,7 @@ export default function FoodScanSection() {
         setShowCamera(false); 
         setScanResult(null);
         setError(null);
-        setInitialCameraModeApplied(true); // User captured, consider manual override
+        setInitialCameraModeApplied(true); 
       } else {
          setError("Could not capture image from camera.");
          toast({variant: "destructive", title: "Capture Error", description: "Failed to capture image from camera."});
@@ -164,6 +164,16 @@ export default function FoodScanSection() {
     }
   };
 
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setImageDataUri(null);
+    setScanResult(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const toggleCameraMode = () => {
     if (showCamera) { 
       setShowCamera(false);
@@ -174,7 +184,7 @@ export default function FoodScanSection() {
       setError(null);
       setShowCamera(true); 
     }
-    setInitialCameraModeApplied(true); // User manually toggled, subsequent query param effects should respect this
+    setInitialCameraModeApplied(true); 
   };
 
   return (
@@ -200,7 +210,7 @@ export default function FoodScanSection() {
           {showCamera ? (
             <div className="space-y-4">
               <video ref={videoRef} className="w-full aspect-video rounded-md border bg-muted" autoPlay muted playsInline />
-              {hasCameraPermission === false && !error && ( // Only show if permission specifically denied and no other error exists
+              {hasCameraPermission === false && !error && ( 
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Camera Permission Denied</AlertTitle>
@@ -209,7 +219,7 @@ export default function FoodScanSection() {
                   </AlertDescription>
                 </Alert>
               )}
-              {hasCameraPermission && ( // Only show capture button if permission granted
+              {hasCameraPermission && ( 
                 <Button onClick={handleCaptureImage} disabled={isLoading} className="w-full text-lg py-6">
                   <Camera className="mr-2 h-5 w-5" />
                   Capture Photo
@@ -225,6 +235,7 @@ export default function FoodScanSection() {
                 ref={fileInputRef}
                 className="file:text-primary file:font-semibold file:bg-primary/10 hover:file:bg-primary/20 file:rounded-md file:border-0"
                 aria-label="Upload food image"
+                disabled={isLoading}
               />
               {imagePreview && (
                 <div className="mt-4 p-2 border border-dashed border-border rounded-lg aspect-video relative w-full max-w-md mx-auto overflow-hidden">
@@ -236,25 +247,40 @@ export default function FoodScanSection() {
           
           <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-          {!showCamera && ( // Analyze button only available if not in camera mode (i.e., an image is uploaded or captured)
-            <Button onClick={handleSubmit} disabled={isLoading || !imagePreview} className="w-full text-lg py-6 bg-primary hover:bg-primary/90">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Analyze Meal
-                </>
-              )}
-            </Button>
+          {imagePreview && !showCamera && (
+            <div className="mt-6 space-y-3">
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isLoading || !imageDataUri}
+                className="w-full text-lg py-6 bg-primary hover:bg-primary/90"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Analyze Meal
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleRemoveImage} 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                <XCircle className="mr-2 h-5 w-5" />
+                Clear Image
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
       
-      {error && !isLoading && ( // Show general errors if not loading
+      {error && !isLoading && ( 
          <Alert variant="destructive" className="animate-in fade-in-0 duration-300">
            <AlertCircle className="h-4 w-4" />
            <AlertTitle>Error</AlertTitle>
