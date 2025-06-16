@@ -6,7 +6,7 @@ import { useMealLog } from '@/hooks/use-meal-log';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BookOpenText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import AuthGuard from '@/components/auth-guard'; // Import AuthGuard
+// import AuthGuard from '@/components/auth-guard'; // Removed AuthGuard
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,8 +88,8 @@ function MealLogContent() {
 
 export default function MealLogPage() {
   return (
-    <AuthGuard>
+    // <AuthGuard> // Removed AuthGuard
       <MealLogContent />
-    </AuthGuard>
+    // </AuthGuard> // Removed AuthGuard
   );
 }

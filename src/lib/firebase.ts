@@ -1,32 +1,3 @@
-
-// IMPORTANT: Add your Firebase project configuration to your .env file.
-// Example .env content:
-// NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-// NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-// NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-// NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-// NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-// NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
-}
-
-const auth: Auth = getAuth(app);
-
-export { app, auth };
+// This file is intentionally left empty as Firebase Auth features are being reverted.
+// If you re-add Firebase services, you can re-populate this file
+// with the Firebase initialization code.

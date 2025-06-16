@@ -3,7 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import MainLayout from '@/components/layout/main-layout';
-import { AuthProvider } from '@/context/auth-context'; // Import AuthProvider
+// import { AuthProvider } from '@/context/auth-context'; // Removed AuthProvider
 
 export const metadata: Metadata = {
   title: 'NutriSnap',
@@ -23,12 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
       </head>
       <body className="font-body antialiased">
-        <AuthProvider> {/* Wrap with AuthProvider */}
+        {/* <AuthProvider> */} {/* Removed AuthProvider */}
           <MainLayout>
             {children}
           </MainLayout>
           <Toaster />
-        </AuthProvider>
+        {/* </AuthProvider> */} {/* Removed AuthProvider */}
       </body>
     </html>
   );

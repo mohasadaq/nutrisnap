@@ -1,10 +1,10 @@
 
 import FoodScanSection from '@/components/food-scan-section';
-import AuthGuard from '@/components/auth-guard';
+// import AuthGuard from '@/components/auth-guard'; // Removed AuthGuard
 
 export default function HomePage() {
   return (
-    <AuthGuard>
+    // <AuthGuard> // Removed AuthGuard
       <div className="container mx-auto py-8 px-4">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary drop-shadow-sm">
@@ -16,6 +16,6 @@ export default function HomePage() {
         </header>
         <FoodScanSection />
       </div>
-    </AuthGuard>
+    // </AuthGuard> // Removed AuthGuard
   );
 }
