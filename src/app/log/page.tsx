@@ -1,3 +1,4 @@
+
 "use client";
 
 import MealLogTable from '@/components/meal-log-table';
@@ -5,6 +6,7 @@ import { useMealLog } from '@/hooks/use-meal-log';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BookOpenText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import AuthGuard from '@/components/auth-guard'; // Import AuthGuard
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +17,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 
 
-export default function MealLogPage() {
+function MealLogContent() {
   const { loggedMeals, isLoaded, clearLog } = useMealLog();
   const { toast } = useToast();
 
@@ -81,5 +83,13 @@ export default function MealLogPage() {
       </div>
       <MealLogTable meals={loggedMeals} onClearLog={handleClearLog} />
     </div>
+  );
+}
+
+export default function MealLogPage() {
+  return (
+    <AuthGuard>
+      <MealLogContent />
+    </AuthGuard>
   );
 }
