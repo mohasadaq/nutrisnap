@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera, XCircle } from 'lucide-react';
 import NutritionDisplayCard from './nutrition-display-card';
 import type { ScannedFoodItem } from '@/lib/types';
-// import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition'; // Server Action disabled for static export
+import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -152,12 +152,10 @@ export default function FoodScanSection() {
     }
     setIsLoading(true); setError(null); setScanResult(null);
     try {
-      // const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri }); // Server Action call commented out for static export
-      // setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri }); // Also commented out as it depends on the result
-      setError("AI analysis is disabled for static export. This feature requires a server.");
-      toast({ variant: "destructive", title: "Feature Disabled", description: "AI food analysis is not available in this static version." });
+      const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri }); 
+      setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri });
     } catch (err) {
-      console.error("AI analysis error (should not happen if call is commented out):", err);
+      console.error("AI analysis error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred during analysis.";
       setError(`Failed to analyze food: ${errorMessage}`);
       toast({ variant: "destructive", title: "Analysis Failed", description: `Could not analyze the food image. ${errorMessage}` });
@@ -290,7 +288,6 @@ export default function FoodScanSection() {
          </Alert>
       )}
 
-      {/* scanResult will not be populated if Server Action is disabled */}
       {scanResult && !isLoading && (
         <NutritionDisplayCard item={scanResult} />
       )}
