@@ -19,25 +19,27 @@ const ScanFoodAndAnalyzeNutritionInputSchema = z.object({
 });
 export type ScanFoodAndAnalyzeNutritionInput = z.infer<typeof ScanFoodAndAnalyzeNutritionInputSchema>;
 
+const NutritionAnalysisSchema = z.object({
+  calories: z.number().describe('Estimated calories in the food item.'),
+  protein: z.number().describe('Estimated protein content in grams.'),
+  carbohydrates: z.number().describe('Estimated carbohydrate content in grams.'),
+  fat: z.number().describe('Estimated fat content in grams.'),
+  saturatedFat: z.number().optional().describe('Estimated saturated fat content in grams.'),
+  sugars: z.number().optional().describe('Estimated sugar content in grams (part of carbohydrates).'),
+  calcium: z.number().optional().describe('Estimated calcium content in milligrams (mg).'),
+  vitaminD: z.number().optional().describe('Estimated Vitamin D content in International Units (IU) or micrograms (mcg). Specify unit in reasoning if possible.'),
+  vitaminB12: z.number().optional().describe('Estimated Vitamin B12 content in micrograms (mcg).'),
+  potassium: z.number().optional().describe('Estimated potassium content in milligrams (mg).'),
+  phosphorus: z.number().optional().describe('Estimated phosphorus content in milligrams (mg).'),
+  riboflavin: z.number().optional().describe('Estimated Riboflavin (Vitamin B2) content in milligrams (mg).'),
+  sodium: z.number().optional().describe('Estimated sodium content in milligrams (mg).'),
+});
+
 const ScanFoodAndAnalyzeNutritionOutputSchema = z.object({
   foodIdentification: z
     .string()
     .describe('The identified food item from the image.'),
-  nutritionAnalysis: z.object({
-    calories: z.number().describe('Estimated calories in the food item.'),
-    protein: z.number().describe('Estimated protein content in grams.'),
-    carbohydrates: z.number().describe('Estimated carbohydrate content in grams.'),
-    fat: z.number().describe('Estimated fat content in grams.'),
-    saturatedFat: z.number().optional().describe('Estimated saturated fat content in grams.'),
-    sugars: z.number().optional().describe('Estimated sugar content in grams (part of carbohydrates).'),
-    calcium: z.number().optional().describe('Estimated calcium content in milligrams (mg).'),
-    vitaminD: z.number().optional().describe('Estimated Vitamin D content in International Units (IU) or micrograms (mcg). Specify unit in reasoning if possible.'),
-    vitaminB12: z.number().optional().describe('Estimated Vitamin B12 content in micrograms (mcg).'),
-    potassium: z.number().optional().describe('Estimated potassium content in milligrams (mg).'),
-    phosphorus: z.number().optional().describe('Estimated phosphorus content in milligrams (mg).'),
-    riboflavin: z.number().optional().describe('Estimated Riboflavin (Vitamin B2) content in milligrams (mg).'),
-    sodium: z.number().optional().describe('Estimated sodium content in milligrams (mg).'),
-  }).describe('Nutritional information for the identified food item, including micronutrients if available, especially for items like milk.'),
+  nutritionAnalysis: NutritionAnalysisSchema.describe('Nutritional information for the identified food item, including micronutrients if available, especially for items like milk.'),
 });
 export type ScanFoodAndAnalyzeNutritionOutput = z.infer<typeof ScanFoodAndAnalyzeNutritionOutputSchema>;
 
@@ -50,7 +52,7 @@ const prompt = ai.definePrompt({
   input: {schema: ScanFoodAndAnalyzeNutritionInputSchema},
   output: {schema: ScanFoodAndAnalyzeNutritionOutputSchema},
   config: {
-    temperature: 0.2, // Lower temperature for more deterministic output
+    temperature: 0.1, // Lowered temperature for more deterministic output
   },
   prompt: `You are a nutritional expert. You will identify the food item in the image and provide an estimate of its nutritional content.
 Focus on providing calories, protein, carbohydrates, and total fat.
@@ -61,7 +63,9 @@ Use the following image to identify the food item and estimate its nutritional c
 Food Image: {{media url=photoDataUri}}
 
 Provide the food identification and nutritional analysis in the specified JSON output format. Ensure all numerical values are numbers, not strings.
-If a specific nutrient is not applicable or data is unavailable, omit the field or set it to an appropriate default (e.g., 0 if truly zero, or omit if unknown).
+You MUST provide a value for EVERY field defined in the 'ScanFoodAndAnalyzeNutritionOutputSchema.nutritionAnalysis' object (calories, protein, carbohydrates, fat, saturatedFat, sugars, calcium, vitaminD, vitaminB12, potassium, phosphorus, riboflavin, sodium).
+If a specific nutrient is not applicable for the identified food item, or if the data is genuinely unavailable, use the value 0 for that nutrient. Do not omit fields.
+
 Example for milk:
 {
   "foodIdentification": "Whole Milk",
@@ -73,7 +77,7 @@ Example for milk:
     "saturatedFat": 5,
     "sugars": 12,
     "calcium": 300,
-    "vitaminD": 100, // assuming IU
+    "vitaminD": 100,
     "vitaminB12": 1.2,
     "potassium": 380,
     "phosphorus": 250,
@@ -89,7 +93,15 @@ Example for a non-dairy item where extended nutrients might not be primary:
     "protein": 0.5,
     "carbohydrates": 25,
     "fat": 0.3,
-    "sugars": 19
+    "sugars": 19,
+    "saturatedFat": 0,
+    "calcium": 6,
+    "vitaminD": 0,
+    "vitaminB12": 0,
+    "potassium": 107,
+    "phosphorus": 11,
+    "riboflavin": 0.03,
+    "sodium": 1
   }
 }
 `,
@@ -103,6 +115,39 @@ const scanFoodAndAnalyzeNutritionFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+
+    // Define a default structure for nutritionAnalysis ensuring all fields are present.
+    const defaultNutritionAnalysisData = {
+        calories: 0, protein: 0, carbohydrates: 0, fat: 0,
+        saturatedFat: 0, sugars: 0, calcium: 0, vitaminD: 0,
+        vitaminB12: 0, potassium: 0, phosphorus: 0, riboflavin: 0, sodium: 0
+    };
+
+    const analysisFromAI = output?.nutritionAnalysis || {};
+    const mergedAnalysis = { ...defaultNutritionAnalysisData, ...analysisFromAI };
+
+    // Coerce all nutrient values to numbers, defaulting to 0 if NaN or undefined.
+    const finalNutritionAnalysis = {
+        calories: Number(mergedAnalysis.calories) || 0,
+        protein: Number(mergedAnalysis.protein) || 0,
+        carbohydrates: Number(mergedAnalysis.carbohydrates) || 0,
+        fat: Number(mergedAnalysis.fat) || 0,
+        saturatedFat: Number(mergedAnalysis.saturatedFat) || 0,
+        sugars: Number(mergedAnalysis.sugars) || 0,
+        calcium: Number(mergedAnalysis.calcium) || 0,
+        vitaminD: Number(mergedAnalysis.vitaminD) || 0,
+        vitaminB12: Number(mergedAnalysis.vitaminB12) || 0,
+        potassium: Number(mergedAnalysis.potassium) || 0,
+        phosphorus: Number(mergedAnalysis.phosphorus) || 0,
+        riboflavin: Number(mergedAnalysis.riboflavin) || 0,
+        sodium: Number(mergedAnalysis.sodium) || 0,
+    };
+    
+    const finalOutput: ScanFoodAndAnalyzeNutritionOutput = {
+        foodIdentification: output?.foodIdentification || "Unknown Food",
+        nutritionAnalysis: finalNutritionAnalysis,
+    };
+
+    return finalOutput;
   }
 );

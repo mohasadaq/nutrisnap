@@ -46,8 +46,8 @@ export async function improveNutritionEstimation(input: ImproveNutritionEstimati
 }
 
 // Helper function to format nutrient details for the prompt
-const formatNutrientDetails = (estimation: z.infer<typeof NutritionEstimationSchema>) => {
-  let details = `Calories: ${estimation.calories}, Protein: ${estimation.protein}g, Carbohydrates: ${estimation.carbohydrates}g, Fat: ${estimation.fat}g`;
+const formatNutrientDetails = (estimation: Partial<z.infer<typeof NutritionEstimationSchema>>) => {
+  let details = `Calories: ${estimation.calories ?? 'N/A'}, Protein: ${estimation.protein ?? 'N/A'}g, Carbohydrates: ${estimation.carbohydrates ?? 'N/A'}g, Fat: ${estimation.fat ?? 'N/A'}g`;
   if (estimation.saturatedFat !== undefined) details += `, Saturated Fat: ${estimation.saturatedFat}g`;
   if (estimation.sugars !== undefined) details += `, Sugars: ${estimation.sugars}g`;
   if (estimation.calcium !== undefined) details += `, Calcium: ${estimation.calcium}mg`;
@@ -65,7 +65,7 @@ const prompt = ai.definePrompt({
   input: {schema: ImproveNutritionEstimationInputSchema},
   output: {schema: ImproveNutritionEstimationOutputSchema},
   config: {
-    temperature: 0.2, // Lower temperature for more deterministic output
+    temperature: 0.1, // Lowered temperature for more deterministic output
   },
   prompt: `You are an AI assistant specializing in refining nutrition estimations for food items based on user feedback.
 You will receive the original detailed nutrition estimation for a food item, along with feedback from a user.
@@ -110,27 +110,38 @@ const improveNutritionEstimationFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    // Ensure all fields in updatedEstimation are present, defaulting to 0 if undefined from AI
+    
     const defaultNutrients: Required<z.infer<typeof NutritionEstimationSchema>> = {
         calories: 0, protein: 0, carbohydrates: 0, fat: 0,
         saturatedFat: 0, sugars: 0, calcium: 0, vitaminD: 0,
         vitaminB12: 0, potassium: 0, phosphorus: 0, riboflavin: 0, sodium: 0
     };
     
-    const finalOutput = {
-        ...output,
-        updatedEstimation: {
-            ...defaultNutrients, // Provide defaults
-            ...(output?.updatedEstimation || {}), // Spread AI output over defaults
-        },
+    const estimationFromAI = output?.updatedEstimation || {};
+    const mergedEstimation = { ...defaultNutrients, ...estimationFromAI };
+
+    const finalUpdatedEstimation = {
+        calories: Number(mergedEstimation.calories) || 0,
+        protein: Number(mergedEstimation.protein) || 0,
+        carbohydrates: Number(mergedEstimation.carbohydrates) || 0,
+        fat: Number(mergedEstimation.fat) || 0,
+        saturatedFat: Number(mergedEstimation.saturatedFat) || 0,
+        sugars: Number(mergedEstimation.sugars) || 0,
+        calcium: Number(mergedEstimation.calcium) || 0,
+        vitaminD: Number(mergedEstimation.vitaminD) || 0,
+        vitaminB12: Number(mergedEstimation.vitaminB12) || 0,
+        potassium: Number(mergedEstimation.potassium) || 0,
+        phosphorus: Number(mergedEstimation.phosphorus) || 0,
+        riboflavin: Number(mergedEstimation.riboflavin) || 0,
+        sodium: Number(mergedEstimation.sodium) || 0,
     };
 
-    // Ensure required base nutrients are numbers, even if AI somehow misses them.
-    finalOutput.updatedEstimation.calories = Number(finalOutput.updatedEstimation.calories) || 0;
-    finalOutput.updatedEstimation.protein = Number(finalOutput.updatedEstimation.protein) || 0;
-    finalOutput.updatedEstimation.carbohydrates = Number(finalOutput.updatedEstimation.carbohydrates) || 0;
-    finalOutput.updatedEstimation.fat = Number(finalOutput.updatedEstimation.fat) || 0;
+    const finalOutput = {
+        reasoning: output?.reasoning || "No reasoning provided.",
+        updatedEstimation: finalUpdatedEstimation,
+    };
     
     return finalOutput as ImproveNutritionEstimationOutput;
   }
 );
+
