@@ -3,10 +3,11 @@
 
 import { useState, useRef, type ChangeEvent, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera, SwitchCamera } from 'lucide-react';
+import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera } from 'lucide-react';
 import NutritionDisplayCard from './nutrition-display-card';
 import type { ScannedFoodItem } from '@/lib/types';
 import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition';
@@ -21,19 +22,35 @@ export default function FoodScanSection() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null); // For capturing image from video
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
-
+  
+  const searchParams = useSearchParams();
   const [showCamera, setShowCamera] = useState(false);
+  const [initialCameraModeApplied, setInitialCameraModeApplied] = useState(false);
+
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  // Effect for managing camera stream
   useEffect(() => {
+    const cameraParam = searchParams.get('camera');
+    if (cameraParam === 'true' && !initialCameraModeApplied && !showCamera) {
+      setImagePreview(null);
+      setImageDataUri(null);
+      setScanResult(null);
+      setError(null);
+      setShowCamera(true); 
+      setInitialCameraModeApplied(true); 
+    }
+  }, [searchParams, initialCameraModeApplied, showCamera]);
+
+  useEffect(() => {
+    let currentStream: MediaStream | null = null;
     if (showCamera) {
       const getCameraPermission = async () => {
         try {
           const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          currentStream = mediaStream;
           setStream(mediaStream);
           setHasCameraPermission(true);
           if (videoRef.current) {
@@ -48,12 +65,11 @@ export default function FoodScanSection() {
             title: 'Camera Access Denied',
             description: 'Please enable camera permissions in your browser settings to use this feature.',
           });
-          setShowCamera(false); // Switch back to file upload mode
+          setShowCamera(false); 
         }
       };
       getCameraPermission();
     } else {
-      // Cleanup: stop camera stream when not shown or component unmounts
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
@@ -62,9 +78,11 @@ export default function FoodScanSection() {
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => {
-      if (stream) {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+       if (stream && !showCamera) { // ensure stream is stopped if component unmounts while camera was supposed to be off
         stream.getTracks().forEach(track => track.stop());
       }
     };
@@ -82,7 +100,7 @@ export default function FoodScanSection() {
         setImagePreview(null); setImageDataUri(null);
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
         setError("File is too large. Maximum size is 5MB.");
         toast({ variant: "destructive", title: "Upload Error", description: "File is too large. Maximum size is 5MB." });
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -90,7 +108,10 @@ export default function FoodScanSection() {
         return;
       }
 
-      setError(null); setScanResult(null); setShowCamera(false); // Ensure camera is off
+      setError(null); setScanResult(null); 
+      if (showCamera) setShowCamera(false); // Switch to file upload mode visually
+      setInitialCameraModeApplied(true); // User interacted, override query param check for this instance
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -112,15 +133,16 @@ export default function FoodScanSection() {
         const dataUri = canvas.toDataURL('image/jpeg');
         setImagePreview(dataUri);
         setImageDataUri(dataUri);
-        setShowCamera(false); // Hide camera, show preview
+        setShowCamera(false); 
         setScanResult(null);
         setError(null);
+        setInitialCameraModeApplied(true); // User captured, consider manual override
       } else {
          setError("Could not capture image from camera.");
          toast({variant: "destructive", title: "Capture Error", description: "Failed to capture image from camera."});
       }
     }
-  }, [hasCameraPermission]);
+  }, [hasCameraPermission, toast]);
 
   const handleSubmit = async () => {
     if (!imageDataUri) {
@@ -143,15 +165,16 @@ export default function FoodScanSection() {
   };
 
   const toggleCameraMode = () => {
-    if (showCamera) { // Turning camera off
+    if (showCamera) { 
       setShowCamera(false);
-    } else { // Turning camera on
+    } else { 
       setImagePreview(null);
       setImageDataUri(null);
       setScanResult(null);
       setError(null);
-      setShowCamera(true);
+      setShowCamera(true); 
     }
+    setInitialCameraModeApplied(true); // User manually toggled, subsequent query param effects should respect this
   };
 
   return (
@@ -177,7 +200,7 @@ export default function FoodScanSection() {
           {showCamera ? (
             <div className="space-y-4">
               <video ref={videoRef} className="w-full aspect-video rounded-md border bg-muted" autoPlay muted playsInline />
-              {hasCameraPermission === false && !error && (
+              {hasCameraPermission === false && !error && ( // Only show if permission specifically denied and no other error exists
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Camera Permission Denied</AlertTitle>
@@ -186,7 +209,7 @@ export default function FoodScanSection() {
                   </AlertDescription>
                 </Alert>
               )}
-              {hasCameraPermission && (
+              {hasCameraPermission && ( // Only show capture button if permission granted
                 <Button onClick={handleCaptureImage} disabled={isLoading} className="w-full text-lg py-6">
                   <Camera className="mr-2 h-5 w-5" />
                   Capture Photo
@@ -213,7 +236,7 @@ export default function FoodScanSection() {
           
           <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-          {!showCamera && (
+          {!showCamera && ( // Analyze button only available if not in camera mode (i.e., an image is uploaded or captured)
             <Button onClick={handleSubmit} disabled={isLoading || !imagePreview} className="w-full text-lg py-6 bg-primary hover:bg-primary/90">
               {isLoading ? (
                 <>
@@ -231,7 +254,7 @@ export default function FoodScanSection() {
         </CardContent>
       </Card>
       
-      {error && !isLoading && (
+      {error && !isLoading && ( // Show general errors if not loading
          <Alert variant="destructive" className="animate-in fade-in-0 duration-300">
            <AlertCircle className="h-4 w-4" />
            <AlertTitle>Error</AlertTitle>
@@ -245,3 +268,4 @@ export default function FoodScanSection() {
     </div>
   );
 }
+
