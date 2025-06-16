@@ -4,6 +4,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.example.nutrisnap',
   appName: 'nutrisnap',
+<<<<<<< HEAD
   // When loading from a live server (for AI features to work), 
   // 'webDir' is less critical but often set to 'public' or a similar
   // directory that might contain static assets not served by Next.js.
@@ -22,6 +23,9 @@ const config: CapacitorConfig = {
     // For production deployments using HTTPS, you might set this to false or remove it.
     cleartext: true, 
   }
+=======
+  webDir: 'out' // Changed from 'public' to 'out' for static export
+>>>>>>> d8eeb1f613914245faf0d0e8c1d07ce150fd0025
 };
 
 export default config;
