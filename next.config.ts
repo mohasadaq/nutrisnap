@@ -2,7 +2,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  // output: 'export', // Removed to support Server Actions
+  // output: 'export', // Removed to support Server Actions and live loading in mobile app
   images: {
     unoptimized: true,
   },
