@@ -64,6 +64,9 @@ const prompt = ai.definePrompt({
   name: 'improveNutritionEstimationPrompt',
   input: {schema: ImproveNutritionEstimationInputSchema},
   output: {schema: ImproveNutritionEstimationOutputSchema},
+  config: {
+    temperature: 0.2, // Lower temperature for more deterministic output
+  },
   prompt: `You are an AI assistant specializing in refining nutrition estimations for food items based on user feedback.
 You will receive the original detailed nutrition estimation for a food item, along with feedback from a user.
 Your goal is to provide an improved, comprehensive nutrition estimation, explaining your reasoning for any changes.

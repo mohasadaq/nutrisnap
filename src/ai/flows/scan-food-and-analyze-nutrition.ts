@@ -49,6 +49,9 @@ const prompt = ai.definePrompt({
   name: 'scanFoodAndAnalyzeNutritionPrompt',
   input: {schema: ScanFoodAndAnalyzeNutritionInputSchema},
   output: {schema: ScanFoodAndAnalyzeNutritionOutputSchema},
+  config: {
+    temperature: 0.2, // Lower temperature for more deterministic output
+  },
   prompt: `You are a nutritional expert. You will identify the food item in the image and provide an estimate of its nutritional content.
 Focus on providing calories, protein, carbohydrates, and total fat.
 Additionally, if the item appears to be milk or a dairy product, provide estimates for: saturated fat (g), sugars (g), calcium (mg), Vitamin D (IU or mcg), Vitamin B12 (mcg), potassium (mg), phosphorus (mg), riboflavin (mg), and sodium (mg). For other food items, include these additional nutrients if readily available and commonly tracked for that item.
