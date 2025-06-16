@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ScannedFoodItem } from '@/lib/types';
@@ -7,6 +8,7 @@ import { Flame, Beef, Wheat, Droplet, Utensils, Percent, Sigma, Zap, Bone, Sun, 
 import Image from 'next/image';
 import { useMealLog } from '@/hooks/use-meal-log';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils'; // Added missing import
 
 interface NutritionDisplayCardProps {
   item: ScannedFoodItem;
