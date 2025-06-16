@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera, XCircle } from 'lucide-react';
 import NutritionDisplayCard from './nutrition-display-card';
 import type { ScannedFoodItem } from '@/lib/types';
-// import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition'; // AI Call disabled for static export
+import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -152,8 +152,9 @@ export default function FoodScanSection() {
     }
     setIsLoading(true); setError(null); setScanResult(null);
     try {
-      // const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri }); // AI Call disabled for static export
-      // setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri }); // AI Call disabled for static export
+      // AI Call is intentionally disabled for static export as Server Actions are not supported.
+      // const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri });
+      // setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri });
       
       // Placeholder for static export - AI analysis is not available
       setError("AI food analysis is not available in this version of the app.");
@@ -303,3 +304,4 @@ export default function FoodScanSection() {
     </div>
   );
 }
+
