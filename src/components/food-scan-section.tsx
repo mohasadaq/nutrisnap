@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, Loader2, UploadCloud, Sparkles, Camera, XCircle } from 'lucide-react';
 import NutritionDisplayCard from './nutrition-display-card';
 import type { ScannedFoodItem } from '@/lib/types';
-import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition';
+// import { scanFoodAndAnalyzeNutrition } from '@/ai/flows/scan-food-and-analyze-nutrition'; // AI Call disabled for static export
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -152,8 +152,17 @@ export default function FoodScanSection() {
     }
     setIsLoading(true); setError(null); setScanResult(null);
     try {
-      const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri }); 
-      setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri });
+      // const result = await scanFoodAndAnalyzeNutrition({ photoDataUri: imageDataUri }); // AI Call disabled for static export
+      // setScanResult({ ...result.nutritionAnalysis, foodIdentification: result.foodIdentification, photoDataUri: imageDataUri }); // AI Call disabled for static export
+      
+      // Placeholder for static export - AI analysis is not available
+      setError("AI food analysis is not available in this version of the app.");
+      toast({
+        variant: "default",
+        title: "Feature Not Available",
+        description: "AI-powered food analysis requires a server and is disabled in this static build.",
+      });
+
     } catch (err) {
       console.error("AI analysis error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred during analysis.";
@@ -262,7 +271,7 @@ export default function FoodScanSection() {
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Analyze Meal
+                    Analyze Meal (AI Disabled for Static Build)
                   </>
                 )}
               </Button>
